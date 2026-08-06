@@ -1,0 +1,5 @@
+# Empty placeholder.
+#
+# Nextflow stages every `path` process input, so an optional file input needs
+# a real file to stage when the option is not set. This is that file; see
+# subworkflows/local/bulk_downstream.nf (ch_enrichr_cache).

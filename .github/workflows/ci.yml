@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# This repository ships no data. The killifish reads are unpublished and the
+# reference genome is large, so CI checks what can be checked without them:
+# that the DSL2 graph parses, that every profile resolves, and that the
+# embedded Python in each module is syntactically valid. Running the pipeline
+# requires the inputs listed in ../DATA.md.
+
+jobs:
+  parse:
+    name: DSL2 parses and profiles resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v2
+
+      - name: Help text renders (parses main.nf and every include)
+        run: nextflow run . --help
+
+      - name: Every profile resolves
+        run: |
+          for p in docker singularity conda sge; do
+            echo "== $p"
+            nextflow config . -profile $p > /dev/null
+          done
+
+  module_scripts:
+    name: Embedded module scripts are valid Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Each process body is a Python script inside a Groovy string, so a
+      # syntax error there is invisible until the task runs on a cluster.
+      # This lifts every one out and compiles it.
+      - name: Compile every python process body
+        run: |
+          python3 - <<'EOF'
+          import ast, pathlib, re, sys, textwrap
+
+          failed = []
+          for f in sorted(pathlib.Path("modules/local").glob("*.nf")):
+              body = re.search(r'script:\s*"""(.*?)"""', f.read_text(), re.S)
+              if not body or "#!/usr/bin/env python" not in body.group(1):
+                  continue
+              src = body.group(1)
+              src = src.replace('\\\\n', '\\n').replace('\\\\r', '\\r')
+              src = src.replace('\\"', '"').replace('\\$', '$').replace('\\\\', '\\')
+              src = re.sub(r'\$\{[^}]*\}', 'X', src)        # Nextflow interpolation
+              src = textwrap.dedent(src)
+              src = "\n".join(l for l in src.splitlines() if not l.strip().startswith("#!"))
+              try:
+                  ast.parse(src)
+                  print(f"ok    {f.name}")
+              except SyntaxError as e:
+                  failed.append(f"{f.name}:{e.lineno}: {e.msg}")
+                  print(f"FAIL  {f.name}:{e.lineno}: {e.msg}")
+          sys.exit(1 if failed else 0)
+          EOF

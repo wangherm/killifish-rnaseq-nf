@@ -1,0 +1,13 @@
+sample,fastq_1,fastq_2,condition
+ED1,/data/killifish/ED1_R1_001.fastq.gz,/data/killifish/ED1_R2_001.fastq.gz,Early Diapause
+ED2,/data/killifish/ED2_R1_001.fastq.gz,/data/killifish/ED2_R2_001.fastq.gz,Early Diapause
+ED3,/data/killifish/ED3_R1_001.fastq.gz,/data/killifish/ED3_R2_001.fastq.gz,Early Diapause
+ED4,/data/killifish/ED4_R1_001.fastq.gz,/data/killifish/ED4_R2_001.fastq.gz,Early Diapause
+LD1,/data/killifish/LD1_R1_001.fastq.gz,/data/killifish/LD1_R2_001.fastq.gz,Late Diapause
+LD2,/data/killifish/LD2_R1_001.fastq.gz,/data/killifish/LD2_R2_001.fastq.gz,Late Diapause
+EX1,/data/killifish/EX1_R1_001.fastq.gz,/data/killifish/EX1_R2_001.fastq.gz,Exit Day 1
+EX2,/data/killifish/EX2_R1_001.fastq.gz,/data/killifish/EX2_R2_001.fastq.gz,Exit Day 1
+D71,/data/killifish/D71_R1_001.fastq.gz,/data/killifish/D71_R2_001.fastq.gz,Developing
+D72,/data/killifish/D72_R1_001.fastq.gz,/data/killifish/D72_R2_001.fastq.gz,Developing
+D73,/data/killifish/D73_R1_001.fastq.gz,/data/killifish/D73_R2_001.fastq.gz,Developing
+D74,/data/killifish/D74_R1_001.fastq.gz,/data/killifish/D74_R2_001.fastq.gz,Developing
