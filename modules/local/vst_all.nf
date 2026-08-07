@@ -31,6 +31,12 @@ process VST_ALL {
     meta = pd.read_csv("${samplesheet}").set_index("sample")
 
     counts = counts.loc[counts.sum(axis=1) >= ${params.min_gene_count}]
+    extra = [c for c in counts.columns if c not in meta.index]
+    if extra:
+        raise SystemExit(
+            f"{len(extra)} count column(s) have no samplesheet row: {extra[:10]}. "
+            "The design is read from the sheet, so every column needs metadata: "
+            "add the rows, or subset the matrix to the samples you are analysing.")
     meta = meta.loc[counts.columns]
 
     dds = DeseqDataSet(counts=counts.T.astype(int),

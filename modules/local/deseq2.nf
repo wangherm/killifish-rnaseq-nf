@@ -39,6 +39,12 @@ process DESEQ2 {
     # Genes with almost no signal add dispersion-estimation noise and inflate
     # the multiple-testing burden without carrying information.
     counts = counts.loc[counts.sum(axis=1) >= ${params.min_gene_count}]
+    extra = [c for c in counts.columns if c not in meta.index]
+    if extra:
+        raise SystemExit(
+            f"{len(extra)} count column(s) have no samplesheet row: {extra[:10]}. "
+            "The design is read from the sheet, so every column needs metadata: "
+            "add the rows, or subset the matrix to the samples you are analysing.")
     meta = meta.loc[counts.columns]
 
     keep = meta.index[meta["condition"].isin(["${contrast.test}", "${contrast.reference}"])]

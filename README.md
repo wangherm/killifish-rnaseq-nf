@@ -183,9 +183,9 @@ Three decisions worth defending, since they are the ones I would ask about:
 
 **The module map is defined on the full multi-state VST matrix, not on one contrast's two conditions.** `VST_ALL` fits the transform once over every sample, so the K-means clusters gene profiles across the whole developing → diapause → exit trajectory. Clustering a single contrast's VST would define the modules on a slice of that trajectory.
 
-**Enrichment queries run on declared orthologues, not uppercased killifish symbols.** Enrichr's libraries are human and mouse gene sets, so an unmapped killifish symbol submitted under a guessed spelling is at best ignored and at worst a wrong-gene hit. Genes are mapped through `--orthologues` first, and a module below `--enrichment_min_mapped_fraction` (default 50%) fails loudly rather than return an empty table that reads like "nothing is enriched". A failed query exits non-zero so Nextflow's retry policy actually fires.
+**Enrichment queries run on declared orthologues, not uppercased killifish symbols.** Enrichr's libraries are human and mouse gene sets, so an unmapped killifish symbol submitted under a guessed spelling is at best ignored and at worst a wrong-gene hit. Genes are mapped through `--orthologues` first, A module below `--enrichment_min_mapped_fraction` (default 50%) is not queried at all, and records a row naming its coverage, rather than returning an empty table that reads like "nothing is enriched". That case is deterministic, so it exits 0 and leaves the other modules running; a failed *query* exits non-zero so Nextflow's retry policy actually fires.
 
-**The downstream half needs a `condition` column in the samplesheet.** It is optional for quantification and required here, so it is validated at the point it is needed: a run that only wants a count matrix is not blocked by metadata it does not use. The `test` profile skips the downstream half because the public test data has no conditions, and inventing them would produce a smoke test that tests nothing.
+**The downstream half needs a `condition` column in the samplesheet.** It is optional for quantification and required here, so it is validated at the point it is needed: a run that only wants a count matrix is not blocked by metadata it does not use.
 
 ## Requirements
 

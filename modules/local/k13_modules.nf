@@ -72,6 +72,7 @@ process K13_MODULES {
                   "module": [remap[c] for c in score.index],
                   "ordering_score": score.to_numpy(),
                   "ordering_rule": "descending mean over '${params.k13_order_condition}' samples"}
+                 ).sort_values("ordering_score", ascending=False
                  ).to_csv("K13_label_map.csv", index=False)
 
     assignments = pd.DataFrame({"gene": Z.index,

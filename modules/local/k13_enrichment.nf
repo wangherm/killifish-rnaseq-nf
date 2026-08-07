@@ -5,13 +5,17 @@
     libraries are human and mouse gene sets, so an unmapped killifish symbol
     uppercased and submitted is at best ignored and at worst a wrong-gene hit.
     Genes are therefore mapped through an explicit orthologue table first, and
-    the module fails loudly when too little of it maps — a silent all-unmapped
-    query would return an empty table that reads like "nothing is enriched".
+    the module is not queried at all when too little of it maps — a silent
+    all-unmapped query would return an empty table that reads like "nothing is
+    enriched".
 
     Split per module so the 13 queries run concurrently and a transient API
-    failure retries one module instead of all of them. Query failures raise:
-    writing a failure row and exiting 0 would make the task look successful,
-    and Nextflow's retry policy would never fire.
+    failure retries one module instead of all of them. Two failure kinds are
+    handled differently, because they are different: a query failure raises,
+    so Nextflow's retry policy fires and a rate limit does not become a
+    missing result. Orthologue coverage below the floor is deterministic, so
+    it writes a row naming the coverage and exits 0: retrying cannot change
+    it, and one under-mapped module should not take down the other twelve.
 */
 process K13_ENRICHMENT {
     tag   "${module}"
@@ -70,10 +74,23 @@ process K13_ENRICHMENT {
 
     frac = len(mapped) / max(len(genes), 1)
     if len(mapped) < 5 or frac < MIN_MAPPED_FRACTION:
-        raise SystemExit(
-            f"${module}: {len(mapped)}/{len(genes)} genes have a declared orthologue "
-            f"({frac:.0%}, below the {MIN_MAPPED_FRACTION:.0%} floor). Refusing to "
-            "run an enrichment query on a mostly-unmapped gene set.")
+        # Deterministic, unlike a query failure: the coverage is a property of
+        # the orthologue table and this module's gene set, so a retry cannot
+        # change it, and failing here would take down the sibling modules that
+        # are fine. The omission is recorded instead, with the number that
+        # caused it, so it is auditable rather than silent.
+        reason = (f"{len(mapped)}/{len(genes)} genes have a declared orthologue "
+                  f"({frac:.0%}), below the {MIN_MAPPED_FRACTION:.0%} floor")
+        pd.DataFrame([{"module": "${module}", "library": None, "term": None,
+                       "p_value": None, "adjusted_p_value": None,
+                       "odds_ratio": None, "combined_score": None,
+                       "n_genes_queried": len(mapped),
+                       "not_tested_reason": reason}]
+                     ).to_csv("enrichment_${module}.csv", index=False)
+        with open("versions.yml", "w") as fh:
+            fh.write('"${task.process}":\\n    pandas: ' + pd.__version__ + "\\n")
+        print(f"${module}: not tested. {reason}")
+        raise SystemExit(0)
 
     payload = "\\n".join(mapped.str.upper().unique())
 
