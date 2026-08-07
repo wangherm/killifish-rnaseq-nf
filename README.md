@@ -199,7 +199,7 @@ Nextflow `>=23.04.0`, plus Docker, Singularity or Conda. Nothing else.
 
 ## Development notes
 
-The shell scripts this ports were written by me during my PhD and used to produce the count matrices in the thesis. This Nextflow implementation was written afterwards specifically as a portable version of that same workflow. I used an AI assistant for boilerplate (module scaffolding, CI YAML) and reviewed and tested every process definition myself; the design decisions in the section above are mine and I am happy to talk through any of them.
+The shell scripts this ports were written by me during my PhD and produced the count matrices in the thesis. This Nextflow implementation came afterwards, as a portable version of that same workflow. I used an AI assistant for boilerplate (module scaffolding, CI YAML); the design decisions above are mine.
 
 ## Licence
 
